@@ -1,0 +1,17 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="client.RegController" alignment="center">
+
+    <Label text="Логин"/>
+    <TextField fx:id="loginField" promptText="login"/>
+    <Label text="Пароль"/>
+    <PasswordField fx:id="passwordField1" promptText="password"/>
+    <Label text="Пароль еще раз"/>
+    <PasswordField fx:id="passwordField2" promptText="password"/>
+    <Label text="ваш ник"/>
+    <TextField fx:id="nickField" promptText="nickname"/>
+
+    <Button text="Регистрация" onAction="#tryToReg"/>
+
+</VBox>
