@@ -128,6 +128,10 @@ public class Controller implements Initializable {
                                     }
                                 });
                             }
+                            if (str.startsWith("/newnick ")) {
+                                nickname = str.split(" ")[1];
+                                setTitle(CHAT_TITLE_EMPTY + " : " + nickname);
+                            }
 
                         } else {
                             textArea.appendText(str + "\n");
