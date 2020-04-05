@@ -12,6 +12,11 @@ public class Server {
 
     public Server() {
         clients = new Vector<>();
+        if (!SQLHandler.connect()) {
+            throw new RuntimeException("Не удалось подключиться к БД");
+        }
+
+
         authService = new DbAuthService();
         ServerSocket server = null;
         Socket socket = null;
@@ -30,12 +35,18 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            SQLHandler.disconnect();
+
+
             try {
-                socket.close();
+                if (socket != null) {
+                    socket.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
+                assert server != null;
                 server.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -96,7 +107,8 @@ public class Server {
     public void broadcastClientList() {
         StringBuilder sb = new StringBuilder("/clientlist ");
         for (ClientHandler c : clients) {
-            sb.append(c.getNick() + " ");
+            sb.append(c.getNick())
+                    .append(" ");
         }
 
         String msg = sb.toString();
