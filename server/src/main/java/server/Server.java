@@ -12,16 +12,16 @@ public class Server {
 
     public Server() {
         clients = new Vector<>();
-        if (!SQLHandler.connect()) {
-            throw new RuntimeException("Не удалось подключиться к БД");
-        }
 
-
-        authService = new DbAuthService();
         ServerSocket server = null;
         Socket socket = null;
 
         try {
+            if (!SQLHandler.connect()) {
+                throw new RuntimeException("Не удалось подключиться к БД");
+            }
+            authService = new DbAuthService();
+
             server = new ServerSocket(8189);
             System.out.println("Сервер запущен");
 
@@ -36,8 +36,6 @@ public class Server {
             e.printStackTrace();
         } finally {
             SQLHandler.disconnect();
-
-
             try {
                 if (socket != null) {
                     socket.close();
@@ -46,8 +44,10 @@ public class Server {
                 e.printStackTrace();
             }
             try {
-                assert server != null;
-                server.close();
+
+                if (server != null) {
+                    server.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
