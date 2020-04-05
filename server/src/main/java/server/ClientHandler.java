@@ -84,6 +84,29 @@ public class ClientHandler {
                                 break;
                             }
 
+                            if (str.startsWith("/nick ")) {
+                                System.out.println("сообщение об изменении ника");
+                                String[] token = str.split(" ");
+                                if (token.length == 2 && !token[1].equals("")) {
+
+                                    boolean b = server
+                                            .getAuthService()
+                                            .newNick(getNick(), token[1]);
+                                    if (b) {
+                                        nick = token[1];
+                                        server.broadcastClientList();
+                                        sendMsg("/newnick " + nick);
+                                        sendMsg("Ник изменён успешно");
+
+                                    } else {
+                                        sendMsg("Ник занят");
+
+                                    }
+
+                                } else {
+                                    sendMsg("Ошибка в команде");
+                                }
+                            }
                             if (str.startsWith("/w ")) {
                                 String[] token = str.split(" ", 3);
                                 if (token.length == 3) {
