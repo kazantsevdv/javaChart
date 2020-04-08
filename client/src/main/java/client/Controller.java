@@ -17,18 +17,19 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     private final String IP_ADDRESS = "localhost";
     private final int PORT = 8189;
     private final String CHAT_TITLE_EMPTY = "Chat 2020";
+    public static final int HISTORY_LIMIT = 100;
     @FXML
     public TextArea textArea;
     @FXML
@@ -112,31 +113,42 @@ public class Controller implements Initializable {
 
                     setTitle(CHAT_TITLE_EMPTY + " : " + nickname);
 
-                    //цикл работы
-                    while (true) {
-                        String str = in.readUTF();
-                        if (str.startsWith("/")) {
-                            if (str.equals("/end")) {
-                                break;
-                            }
-                            if (str.startsWith("/clientlist ")) {
-                                String[] token = str.split(" ");
-                                Platform.runLater(() -> {
-                                    clientList.getItems().clear();
-                                    for (int i = 1; i < token.length; i++) {
-                                        clientList.getItems().add(token[i]);
-                                    }
-                                });
-                            }
-                            if (str.startsWith("/newnick ")) {
-                                nickname = str.split(" ")[1];
-                                setTitle(CHAT_TITLE_EMPTY + " : " + nickname);
-                            }
+                    readHistory(loginField.getText(), HISTORY_LIMIT);
 
-                        } else {
-                            textArea.appendText(str + "\n");
+                    try (OutputStreamWriter histout = new OutputStreamWriter(
+                            new FileOutputStream("history_" + loginField.getText() + ".txt", true),
+                            StandardCharsets.UTF_8)) {
+                        //цикл работы
+                        while (true) {
+                            String str = in.readUTF();
+                            if (str.startsWith("/")) {
+                                if (str.equals("/end")) {
+                                    break;
+                                }
+                                if (str.startsWith("/clientlist ")) {
+                                    String[] token = str.split(" ");
+                                    Platform.runLater(() -> {
+                                        clientList.getItems().clear();
+                                        for (int i = 1; i < token.length; i++) {
+                                            clientList.getItems().add(token[i]);
+                                        }
+                                    });
+                                }
+                                if (str.startsWith("/newnick ")) {
+                                    nickname = str.split(" ")[1];
+                                    setTitle(CHAT_TITLE_EMPTY + " : " + nickname);
+                                }
+
+                            } else {
+                                textArea.appendText(str + "\n");
+                                histout.write(str + "\n");
+
+                            }
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+
                 } catch (EOFException e) {
                     System.out.println(e.getMessage());
                 } catch (IOException e) {
@@ -235,4 +247,27 @@ public class Controller implements Initializable {
         }
         System.out.println("сообщение с просьбой регистрации ушла");
     }
+
+    void readHistory(String login, int limit) {
+        List<String> hist = new ArrayList<>();
+        try (BufferedReader bufin = new BufferedReader(new InputStreamReader(new FileInputStream("history_" + login + ".txt"),
+                StandardCharsets.UTF_8))) {
+            String str;
+            while ((str = bufin.readLine()) != null) {
+                hist.add(str);
+            }
+            int from = Math.max(hist.size() - limit, 0);
+            for (int i = from; i < hist.size(); i++) {
+                textArea.appendText(hist.get(i) + "\n");
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
 }
+
+
