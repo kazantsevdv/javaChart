@@ -17,12 +17,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -63,6 +63,7 @@ public class Controller implements Initializable {
         if (!authenticated) {
             nickname = "";
             setTitle(CHAT_TITLE_EMPTY);
+            History.stop();
         }
         textArea.clear();
     }
@@ -106,6 +107,8 @@ public class Controller implements Initializable {
 //                            "/authok nick1"
                             nickname = str.split(" ")[1];
                             setAuthenticated(true);
+                            textArea.appendText(History.readHistory(loginField.getText(), HISTORY_LIMIT));
+                            History.start(loginField.getText());
                             break;
                         }
                         textArea.appendText(str + "\n");
@@ -113,11 +116,6 @@ public class Controller implements Initializable {
 
                     setTitle(CHAT_TITLE_EMPTY + " : " + nickname);
 
-                    readHistory(loginField.getText(), HISTORY_LIMIT);
-
-                    try (OutputStreamWriter histout = new OutputStreamWriter(
-                            new FileOutputStream("history_" + loginField.getText() + ".txt", true),
-                            StandardCharsets.UTF_8)) {
                         //цикл работы
                         while (true) {
                             String str = in.readUTF();
@@ -141,13 +139,11 @@ public class Controller implements Initializable {
 
                             } else {
                                 textArea.appendText(str + "\n");
-                                histout.write(str + "\n");
+                                History.writeLine(str + "\n");
 
                             }
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+
 
                 } catch (EOFException e) {
                     System.out.println(e.getMessage());
@@ -248,26 +244,6 @@ public class Controller implements Initializable {
         System.out.println("сообщение с просьбой регистрации ушла");
     }
 
-    void readHistory(String login, int limit) {
-        List<String> hist = new ArrayList<>();
-        try (BufferedReader bufin = new BufferedReader(new InputStreamReader(new FileInputStream("history_" + login + ".txt"),
-                StandardCharsets.UTF_8))) {
-            String str;
-            while ((str = bufin.readLine()) != null) {
-                hist.add(str);
-            }
-            int from = Math.max(hist.size() - limit, 0);
-            for (int i = from; i < hist.size(); i++) {
-                textArea.appendText(hist.get(i) + "\n");
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-    }
 }
 
 
