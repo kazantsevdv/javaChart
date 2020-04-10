@@ -24,17 +24,17 @@ public class ClientHandler {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(() -> {
-                try {
-                    socket.setSoTimeout(120000);
+           Thread thread = new Thread(() -> {
+               try {
+                   socket.setSoTimeout(120000);
 
-                    //цикл аутентификации
-                    while (true) {
-                        String str = in.readUTF();
-                        if (str.startsWith("/reg ")) {
-                            System.out.println("сообщение с просьбой регистрации прошло");
-                            String[] token = str.split(" ");
-                            boolean b = server
+                   //цикл аутентификации
+                   while (true) {
+                       String str = in.readUTF();
+                       if (str.startsWith("/reg ")) {
+                           System.out.println("сообщение с просьбой регистрации прошло");
+                           String[] token = str.split(" ");
+                           boolean b = server
                                     .getAuthService()
                                     .registration(token[1], token[2], token[3]);
                             if (b) {
@@ -128,17 +128,18 @@ public class ClientHandler {
                 } catch (RuntimeException e) {
                     System.out.println(e.getMessage());
                 } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    server.unsubscribe(this);
-                    System.out.println("Клиент отключился");
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
+                   e.printStackTrace();
+               } finally {
+                   server.unsubscribe(this);
+                   System.out.println("Клиент отключился");
+                   try {
+                       socket.close();
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+               }
+           });
+            server.addThread(thread);
         } catch (IOException e) {
             e.printStackTrace();
         }
