@@ -4,15 +4,17 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class Server {
-    private Vector<ClientHandler> clients;
+    private final Vector<ClientHandler> clients;
     private AuthService authService;
-
+    private final ExecutorService executorService;
     public Server() {
         clients = new Vector<>();
-
+        executorService = Executors.newCachedThreadPool();
         ServerSocket server = null;
         Socket socket = null;
 
@@ -35,6 +37,9 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+
+            executorService.shutdownNow();
+
             SQLHandler.disconnect();
             try {
                 if (socket != null) {
@@ -102,6 +107,11 @@ public class Server {
             }
         }
         return false;
+    }
+
+    public void addThread(Thread tr) {
+        executorService.execute(tr);
+
     }
 
     public void broadcastClientList() {
