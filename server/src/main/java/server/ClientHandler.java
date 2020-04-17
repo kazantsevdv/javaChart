@@ -19,22 +19,24 @@ public class ClientHandler {
     public ClientHandler(Socket socket, Server server) {
         try {
             this.socket = socket;
-            System.out.println("RemoteSocketAddress:  " + socket.getRemoteSocketAddress());
+            Server.logger.info("RemoteSocketAddress:  " + socket.getRemoteSocketAddress());
+            //System.out.println("RemoteSocketAddress:  " + socket.getRemoteSocketAddress());
             this.server = server;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-           Thread thread = new Thread(() -> {
-               try {
-                   socket.setSoTimeout(120000);
+            Thread thread = new Thread(() -> {
+                try {
+                    socket.setSoTimeout(120000);
 
-                   //цикл аутентификации
-                   while (true) {
-                       String str = in.readUTF();
-                       if (str.startsWith("/reg ")) {
-                           System.out.println("сообщение с просьбой регистрации прошло");
-                           String[] token = str.split(" ");
-                           boolean b = server
+                    //цикл аутентификации
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.startsWith("/reg ")) {
+                            Server.logger.info("сообщение с просьбой регистрации прошло");
+//                           System.out.println("сообщение с просьбой регистрации прошло");
+                            String[] token = str.split(" ");
+                            boolean b = server
                                     .getAuthService()
                                     .registration(token[1], token[2], token[3]);
                             if (b) {
@@ -61,7 +63,8 @@ public class ClientHandler {
                                     sendMsg("/authok " + newNick);
                                     nick = newNick;
                                     server.subscribe(this);
-                                    System.out.println("Клиент " + nick + " прошел аутентификацию");
+                                    Server.logger.info("Клиент " + nick + " прошел аутентификацию");
+                                    //System.out.println("Клиент " + nick + " прошел аутентификацию");
                                     socket.setSoTimeout(0);
                                     break;
                                 } else {
@@ -85,7 +88,8 @@ public class ClientHandler {
                             }
 
                             if (str.startsWith("/nick ")) {
-                                System.out.println("сообщение об изменении ника");
+                                Server.logger.info("сообщение об изменении ника");
+                                // System.out.println("сообщение об изменении ника");
                                 String[] token = str.split(" ");
                                 if (token.length == 2 && !token[1].equals("")) {
 
@@ -130,14 +134,15 @@ public class ClientHandler {
                 } catch (IOException e) {
                    e.printStackTrace();
                } finally {
-                   server.unsubscribe(this);
-                   System.out.println("Клиент отключился");
-                   try {
-                       socket.close();
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-               }
+                    server.unsubscribe(this);
+                    Server.logger.info("Клиент отключился");
+                    // System.out.println("Клиент отключился");
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
            });
             server.addThread(thread);
         } catch (IOException e) {

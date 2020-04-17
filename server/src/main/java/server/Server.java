@@ -6,9 +6,11 @@ import java.net.Socket;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 
 public class Server {
+    public static final Logger logger = Logger.getLogger(Server.class.getName());
     private final Vector<ClientHandler> clients;
     private AuthService authService;
     private final ExecutorService executorService;
@@ -25,11 +27,13 @@ public class Server {
             authService = new DbAuthService();
 
             server = new ServerSocket(8189);
-            System.out.println("Сервер запущен");
+            logger.info("Сервер запущен");
+            //System.out.println("Сервер запущен");
 
             while (true) {
                 socket = server.accept();
-                System.out.println("Клиент подключился");
+                logger.info("Клиент подключился");
+                //System.out.println("Клиент подключился");
 
                 new ClientHandler(socket, this);
             }
